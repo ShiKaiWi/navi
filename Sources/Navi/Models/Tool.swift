@@ -23,5 +23,6 @@ extension Tool {
 struct ToolRegistry {
     static let tools: [any Tool] = [
         TimestampTool(),
+        JsonizerTool(),
     ]
 }

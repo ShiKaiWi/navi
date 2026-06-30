@@ -1,0 +1,15 @@
+{
+  "originHash" : "8b05776166de39adeee4525f1180fa19a6702b05a05fb5b9ffc5371844bd9803",
+  "pins" : [
+    {
+      "identity" : "highlightswift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/appstefan/HighlightSwift",
+      "state" : {
+        "revision" : "3db2f351542a31c6e4efc032fdc8ee81b5d46e0b",
+        "version" : "1.0.5"
+      }
+    }
+  ],
+  "version" : 3
+}
