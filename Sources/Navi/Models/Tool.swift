@@ -3,7 +3,9 @@ import SwiftUI
 protocol Tool: Identifiable, Hashable {
     var id: String { get }
     var name: String { get }
+    var description: String { get }
     var icon: String { get }
+    var iconColor: Color { get }
     @MainActor var body: AnyView { get }
 }
 
