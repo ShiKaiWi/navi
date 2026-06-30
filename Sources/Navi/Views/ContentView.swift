@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var selectedToolID: String? = ToolRegistry.tools.first?.id
+    @Binding var selectedToolID: String?
 
     var body: some View {
         NavigationSplitView {
