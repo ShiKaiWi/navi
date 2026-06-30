@@ -20,6 +20,6 @@ extension Tool {
 @MainActor
 struct ToolRegistry {
     static let tools: [any Tool] = [
-        // Tools register here
+        TimestampTool(),
     ]
 }
