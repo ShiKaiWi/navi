@@ -74,14 +74,9 @@ private struct ToolRow: View {
     }
 
     private var textContent: some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text(tool.name)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.primary)
-            Text(tool.description)
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-        }
+        Text(tool.name)
+            .font(.system(size: 13, weight: .medium))
+            .foregroundStyle(.primary)
     }
 
     private var backgroundColor: Color {
