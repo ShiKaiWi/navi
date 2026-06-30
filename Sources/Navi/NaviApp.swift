@@ -4,7 +4,8 @@ import SwiftUI
 struct NaviApp: App {
     var body: some Scene {
         WindowGroup {
-            Text("Navi")
+            ContentView()
+                .frame(minWidth: 600, minHeight: 400)
         }
     }
 }
