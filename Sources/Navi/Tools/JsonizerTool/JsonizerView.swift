@@ -34,11 +34,10 @@ struct JsonizerView: View {
     private static let highlightSizeLimit = 20_000
 
     var body: some View {
-        HSplitView {
+        PanedSplitView {
             inputPane
-                .frame(minWidth: 220)
+        } trailing: {
             outputPane
-                .frame(minWidth: 260)
         }
         .toolbar { toolbarContent }
         .navigationTitle("Jsonizer")
@@ -251,4 +250,93 @@ struct JsonizerView: View {
     private static let sample = """
     {"name":"Navi","version":1.2,"active":true,"tags":["dev","tools","json"],"owner":{"id":42,"email":"ada@example.com","roles":["admin","user"]},"metadata":null}
     """
+}
+
+// MARK: - Split View
+
+private let kSplitDividerWidth: CGFloat = 8
+private let kSplitMinRatio: CGFloat = 0.2
+private let kSplitMaxRatio: CGFloat = 0.8
+
+/// A resizable two-pane horizontal split view built entirely in SwiftUI.
+///
+/// Unlike `HSplitView` (which wraps `NSSplitView`), this view is a simple
+/// `HStack` with a draggable divider. It cooperates with the parent layout
+/// and doesn't impose an intrinsic minimum size — so it works correctly
+/// inside a `NavigationSplitView` without changing the sidebar width.
+struct PanedSplitView<Leading: View, Trailing: View>: View {
+    let leading: Leading
+    let trailing: Trailing
+
+    @State private var ratio: CGFloat = 0.45
+
+    init(
+        @ViewBuilder leading: () -> Leading,
+        @ViewBuilder trailing: () -> Trailing
+    ) {
+        self.leading = leading()
+        self.trailing = trailing()
+    }
+
+    var body: some View {
+        GeometryReader { proxy in
+            let available = proxy.size.width
+            let leftWidth = max(0, available * ratio - kSplitDividerWidth / 2)
+            let rightWidth = max(0, available * (1 - ratio) - kSplitDividerWidth / 2)
+
+            HStack(spacing: 0) {
+                leading
+                    .frame(width: leftWidth)
+                    .clipped()
+
+                DividerHandle(ratio: $ratio)
+
+                trailing
+                    .frame(width: rightWidth)
+                    .clipped()
+            }
+        }
+    }
+}
+
+/// A draggable divider that adjusts the split ratio.
+private struct DividerHandle: View {
+    @Binding var ratio: CGFloat
+    @State private var dragStartRatio: CGFloat = 0
+
+    var body: some View {
+        Color.primary
+            .opacity(0.1)
+            .frame(width: kSplitDividerWidth)
+            .contentShape(Rectangle())
+            .onHover { inside in
+                if inside {
+                    NSCursor.resizeLeftRight.push()
+                } else {
+                    NSCursor.pop()
+                }
+            }
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        if value.translation.width.magnitude < 1
+                            && value.translation.height.magnitude < 1
+                        {
+                            dragStartRatio = ratio
+                        }
+                        guard let sceneWidth = NSApp.keyWindow?.contentView?.bounds.width,
+                              sceneWidth > 0
+                        else { return }
+                        let delta = value.translation.width / sceneWidth
+                        let newRatio = dragStartRatio + delta
+                        ratio = newRatio.clamped(to: kSplitMinRatio...kSplitMaxRatio)
+                    }
+            )
+    }
+}
+
+private extension CGFloat {
+    func clamped(to range: ClosedRange<CGFloat>) -> CGFloat {
+        Swift.min(Swift.max(self, range.lowerBound), range.upperBound)
+    }
 }

@@ -14,7 +14,7 @@ struct Sidebar: View {
     }
 
     private var header: some View {
-        Text("Tools")
+        Text("Navi")
             .font(.title3)
             .fontWeight(.semibold)
             .foregroundStyle(.primary)
@@ -33,9 +33,7 @@ struct Sidebar: View {
                         isHovered: hoveredToolID == tool.id
                     )
                     .onTapGesture {
-                        withAnimation(.easeInOut(duration: 0.15)) {
-                            selectedToolID = tool.id
-                        }
+                        selectedToolID = tool.id
                     }
                     .onHover { hovering in
                         withAnimation(.easeInOut(duration: 0.1)) {

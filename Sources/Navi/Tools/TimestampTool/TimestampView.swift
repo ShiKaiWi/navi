@@ -24,6 +24,7 @@ struct TimestampView: View {
         .onReceive(timer) { _ in
             currentTimestamp = Date().timeIntervalSince1970
         }
+        .navigationTitle("Timestamp")
     }
 
     private var inputSection: some View {

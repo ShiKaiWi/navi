@@ -13,6 +13,7 @@ struct NetSpeedView: View {
             footerSection
         }
         .padding()
+        .navigationTitle("NetSpeed")
     }
 
     private var statusSection: some View {
