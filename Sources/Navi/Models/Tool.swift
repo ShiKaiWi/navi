@@ -25,5 +25,6 @@ struct ToolRegistry {
         TimestampTool(),
         JsonizerTool(),
         NetSpeedTool(),
+        CommandTool(),
     ]
 }
