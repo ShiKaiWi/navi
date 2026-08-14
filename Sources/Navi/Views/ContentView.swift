@@ -3,11 +3,6 @@ import SwiftUI
 struct ContentView: View {
     @Binding var selectedToolID: String?
 
-    /// Cache each tool's `body` so `AnyView` is created once and reused
-    /// instead of being recomputed from the protocol requirement on every
-    /// render. This avoids flash / re-layout when switching tools.
-    @State private var bodyCache: [String: AnyView] = [:]
-
     var body: some View {
         NavigationSplitView {
             Sidebar(tools: ToolRegistry.tools, selectedToolID: $selectedToolID)
@@ -16,22 +11,18 @@ struct ContentView: View {
                 // intrinsic sizes.
                 .navigationSplitViewColumnWidth(220)
         } detail: {
-            if let id = selectedToolID {
-                cachedBody(for: id)
+            if let id = selectedToolID,
+               let tool = ToolRegistry.tools.first(where: { $0.id == id }) {
+                tool.body
+                    // Give each tool a stable identity so SwiftUI diffs the
+                    // detail as a swap of one identified subtree for another,
+                    // rather than re-deriving identity from the erased
+                    // `AnyView` type on every render.
+                    .id(id)
             } else {
                 Text("Select a tool")
                     .foregroundStyle(.secondary)
             }
         }
-    }
-
-    private func cachedBody(for id: String) -> AnyView {
-        if let cached = bodyCache[id] { return cached }
-        guard let tool = ToolRegistry.tools.first(where: { $0.id == id }) else {
-            return AnyView(EmptyView())
-        }
-        let body = tool.body
-        bodyCache[id] = body
-        return body
     }
 }

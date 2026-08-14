@@ -4,11 +4,22 @@ struct TimestampView: View {
     @State private var input: String = ""
     @State private var selectedTimezone: TimeZone = .current
     @State private var currentTimestamp: TimeInterval = Date().timeIntervalSince1970
+    @State private var timezoneSearch: String = ""
 
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
-    private var availableTimezones: [TimeZone] {
+    /// All timezones, built once. Building a `TimeZone` for each of the ~440
+    /// known identifiers is cheap, but it must not happen on every render.
+    private static let availableTimezones: [TimeZone] =
         TimeZone.knownTimeZoneIdentifiers.compactMap { TimeZone(identifier: $0) }
+
+    private var filteredTimezones: [TimeZone] {
+        let query = timezoneSearch.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return Self.availableTimezones }
+        return Self.availableTimezones.filter { tz in
+            tz.identifier.localizedCaseInsensitiveContains(query)
+                || tz.cityName.localizedCaseInsensitiveContains(query)
+        }
     }
 
     var body: some View {
@@ -41,12 +52,56 @@ struct TimestampView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Timezone")
                 .font(.headline)
-            Picker("Timezone", selection: $selectedTimezone) {
-                ForEach(availableTimezones, id: \.identifier) { tz in
-                    Text(tz.identifier).tag(tz)
-                }
+
+            // Search field + lazy list instead of a `Picker`. A `Picker` with
+            // the ~440 `TimeZone.knownTimeZoneIdentifiers` builds every menu
+            // item eagerly on the main thread, which stalls the switch for
+            // ~150 ms. A lazily-rendered, filtered list stays responsive and
+            // is far easier to scan than a 440-item dropdown.
+            HStack(spacing: 6) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+                TextField("Filter timezones…", text: $timezoneSearch)
+                    .textFieldStyle(.plain)
             }
-            .labelsHidden()
+            .padding(6)
+            .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 6))
+
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 2) {
+                    ForEach(filteredTimezones, id: \.identifier) { tz in
+                        timezoneRow(tz)
+                    }
+                }
+                .padding(4)
+            }
+            .frame(height: 160)
+            .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 6))
+        }
+    }
+
+    private func timezoneRow(_ timezone: TimeZone) -> some View {
+        let isSelected = timezone == selectedTimezone
+        return HStack(spacing: 8) {
+            Text(timezone.identifier)
+                .font(.system(.body, design: .monospaced))
+                .lineLimit(1)
+            Spacer(minLength: 0)
+            if isSelected {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.tint)
+            }
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .contentShape(Rectangle())
+        .background(
+            isSelected ? Color.accentColor.opacity(0.12) : Color.clear,
+            in: RoundedRectangle(cornerRadius: 4)
+        )
+        .onTapGesture {
+            selectedTimezone = timezone
         }
     }
 
@@ -183,5 +238,13 @@ struct TimestampView: View {
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         formatter.timeZone = timezone
         return formatter.string(from: date)
+    }
+}
+
+private extension TimeZone {
+    /// The trailing component of the identifier, e.g. "Shanghai" from
+    /// "Asia/Shanghai". Used for friendlier search matching.
+    var cityName: String {
+        identifier.split(separator: "/").last.map(String.init) ?? identifier
     }
 }
