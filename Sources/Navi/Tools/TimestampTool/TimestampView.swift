@@ -5,8 +5,7 @@ struct TimestampView: View {
     @State private var selectedTimezone: TimeZone = .current
     @State private var currentTimestamp: TimeInterval = Date().timeIntervalSince1970
     @State private var timezoneSearch: String = ""
-
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    @State private var autoRefresh = true
 
     /// All timezones, built once. Building a `TimeZone` for each of the ~440
     /// known identifiers is cheap, but it must not happen on every render.
@@ -32,8 +31,12 @@ struct TimestampView: View {
             Spacer()
         }
         .padding()
-        .onReceive(timer) { _ in
-            currentTimestamp = Date().timeIntervalSince1970
+        .task(id: autoRefresh) {
+            guard autoRefresh else { return }
+            while !Task.isCancelled {
+                currentTimestamp = Date().timeIntervalSince1970
+                try? await Task.sleep(for: .seconds(1))
+            }
         }
         .navigationTitle("Timestamp")
     }
@@ -149,20 +152,16 @@ struct TimestampView: View {
 
     private var currentTimeSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Current Time")
-                .font(.headline)
             HStack {
-                Text("Unix:")
-                    .foregroundStyle(.secondary)
-                Text(String(Int64(currentTimestamp)))
-                    .font(.body.monospaced())
+                Text("Current Time")
+                    .font(.headline)
+                Spacer()
+                Toggle("Auto-refresh", isOn: $autoRefresh)
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
             }
-            HStack {
-                Text("ISO 8601:")
-                    .foregroundStyle(.secondary)
-                Text(formatISO8601(date: Date(timeIntervalSince1970: currentTimestamp), timezone: selectedTimezone))
-                    .font(.body.monospaced())
-            }
+            resultRow(label: "Unix:", value: String(Int64(currentTimestamp)))
+            resultRow(label: "ISO 8601:", value: formatISO8601(date: Date(timeIntervalSince1970: currentTimestamp), timezone: selectedTimezone))
         }
     }
 
