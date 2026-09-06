@@ -83,26 +83,7 @@ private struct SpeedLabel: View {
         HStack(spacing: 4) {
             Text(direction)
                 .foregroundStyle(.secondary)
-            Text(formatted)
-        }
-    }
-
-    private var formatted: String {
-        switch unit {
-        case .auto:
-            if speed >= 1_000_000_000 {
-                return String(format: "%.1f GB/s", Double(speed) / 1_000_000_000)
-            } else if speed >= 1_000_000 {
-                return String(format: "%.1f MB/s", Double(speed) / 1_000_000)
-            } else if speed >= 1_000 {
-                return "\(speed / 1_000) KB/s"
-            } else {
-                return "\(speed) B/s"
-            }
-        case .kbps:
-            return "\(speed / 1_000) KB/s"
-        case .mbps:
-            return String(format: "%.1f MB/s", Double(speed) / 1_000_000)
+            Text(SpeedFormat.display(bytesPerSecond: speed, unit: unit))
         }
     }
 }

@@ -18,6 +18,10 @@ let package = Package(
             ],
             path: "Sources/Navi",
             resources: [.process("Assets.xcassets")]
+        ),
+        .testTarget(
+            name: "NaviTests",
+            dependencies: ["Navi"]
         )
     ]
 )

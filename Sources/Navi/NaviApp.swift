@@ -2,26 +2,32 @@ import SwiftUI
 
 @main
 struct NaviApp: App {
-    @State private var netSpeedMonitor = NetSpeedMonitor()
-    @State private var selectedToolID: String? = ToolRegistry.tools.first?.id
+    @State private var session = NaviSession()
 
     var body: some Scene {
         WindowGroup {
-            ContentView(selectedToolID: $selectedToolID)
+            ContentView(selectedToolID: $session.selectedToolID)
                 .frame(minWidth: 600, minHeight: 400)
-                .environment(netSpeedMonitor)
+                .environment(session.monitor)
         }
-        MenuBarExtra {
-            Button("打开 Navi") {
-                NSApplication.shared.activate(ignoringOtherApps: true)
-                selectedToolID = "netspeed"
-            }
-            Divider()
-            Button("退出") {
-                NSApplication.shared.terminate(nil)
-            }
-        } label: {
-            Text(netSpeedMonitor.formattedSpeed)
+    }
+}
+
+@Observable
+@MainActor
+final class NaviSession {
+    var selectedToolID: String? = ToolRegistry.tools.first?.id
+    let monitor: NetSpeedMonitor
+    @ObservationIgnored private let statusItem: NetSpeedStatusItem
+
+    init() {
+        let monitor = NetSpeedMonitor()
+        self.monitor = monitor
+        let statusItem = NetSpeedStatusItem(monitor: monitor)
+        self.statusItem = statusItem
+        statusItem.onOpen = { [weak self] in
+            NSApplication.shared.activate(ignoringOtherApps: true)
+            self?.selectedToolID = "netspeed"
         }
     }
 }

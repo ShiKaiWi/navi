@@ -48,29 +48,6 @@ class NetSpeedMonitor {
         startMonitoring()
     }
 
-    var formattedSpeed: String {
-        "\u{2191} \(format(bytes: uploadSpeed)) \u{2193} \(format(bytes: downloadSpeed))"
-    }
-
-    private func format(bytes: UInt64) -> String {
-        switch displayUnit {
-        case .auto:
-            if bytes >= 1_000_000_000 {
-                return String(format: "%.1f GB/s", Double(bytes) / 1_000_000_000)
-            } else if bytes >= 1_000_000 {
-                return String(format: "%.1f MB/s", Double(bytes) / 1_000_000)
-            } else if bytes >= 1_000 {
-                return "\(bytes / 1_000) KB/s"
-            } else {
-                return "\(bytes) B/s"
-            }
-        case .kbps:
-            return "\(bytes / 1_000) KB/s"
-        case .mbps:
-            return String(format: "%.1f MB/s", Double(bytes) / 1_000_000)
-        }
-    }
-
     private func startMonitoring() {
         monitorTask = Task { [weak self] in
             while !Task.isCancelled {
